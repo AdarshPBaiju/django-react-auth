@@ -79,7 +79,7 @@ function Navbar () {
                   </li>
                   <li className='nav-item'>
                     <button
-                      className='nav-link bg-primary'
+                      className='btn btn-primary'
                       onClick={handleLogout}
                     >
                       Logout
