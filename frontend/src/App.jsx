@@ -9,6 +9,8 @@ import Dashboard from "./views/Dashboard";
 import HomePage from "./views/HomePage";
 import LoginPage from "./views/LoginPage";
 import RegisterPage from "./views/RegisterPage";
+import ResetPasswordPage from "./views/ResetPasswordPage";
+import EnterNewPasswordPage from './views/EnterNewPasswordPAge';
 
 function App() {
   return (
@@ -24,6 +26,14 @@ function App() {
             <Route 
                 path="/register" 
                 element={<PrivateRedirect element={<RegisterPage />} />} 
+            />
+            <Route 
+                path="/reset-password" 
+                element={<PrivateRedirect element={<ResetPasswordPage/>} />} 
+            />
+            <Route 
+                path="/reset-password/:uid/:token" 
+                element={<PrivateRedirect element={<EnterNewPasswordPage/>} />} 
             />
             <Route 
                 path="/dashboard" 

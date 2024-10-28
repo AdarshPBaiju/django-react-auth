@@ -65,14 +65,8 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("authTokens", JSON.stringify(response.data));
             await fetchUserData(); // Fetch updated user data after refreshing token
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                // If the refresh token is expired, log the user out
-                showErrorAlert("Session expired. Please log in again.", "logging in again");
-                logoutUser(); // Only call logoutUser if refresh token is expired
-            } else {
-                // Handle server unresponsive case
-                showErrorAlert("Unable to refresh session. Please try again later.", "refreshing your session");
-            }
+            console.error("Token refresh error:", error);
+            logoutUser(); // Logout if token refresh fails
         }
     };
 
@@ -88,10 +82,11 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("authTokens", JSON.stringify(response.data));
 
             await fetchUserData(); // Fetch user data after login
-            showSuccessAlert("You have successfully logged in.");
             navigate("/");
-        } catch {
-            showErrorAlert("Invalid email or password.", "checking your credentials");
+            showSuccessAlert("Login Successful");
+        } catch (error) {
+            console.error("Login error:", error);
+            showErrorAlert("Invalid email or password");
         } finally {
             setLoading(false);
         }
@@ -107,11 +102,12 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (response.status === 201) {
-                showSuccessAlert("Registration successful! You can now log in.");
                 navigate("/login");
+                showSuccessAlert("Registration Successful, Login Now");
             }
-        } catch {
-            showErrorAlert("Registration failed. Please check your input and try again.");
+        } catch (error) {
+            console.error("Registration error:", error);
+            showErrorAlert("An Error Occurred: " + (error.response?.data?.detail || error.message));
         } finally {
             setLoading(false);
         }
@@ -128,12 +124,13 @@ export const AuthProvider = ({ children }) => {
             }
 
             clearAuthData();
-            showSuccessAlert("You have been logged out successfully.");
             navigate("/login");
-        } catch {
-            // Keep user logged in if logout fails
+            showSuccessAlert("You have been logged out...");
+        } catch (error) {
+            console.error('Error during logout:', error);
+            clearAuthData();
+            navigate("/login");
             showErrorAlert("Error while logging out. Token may not be blacklisted.");
-            // No logout action taken
         }
     };
 
@@ -146,9 +143,9 @@ export const AuthProvider = ({ children }) => {
             });
 
             setUser(response.data); // Update the user state with the fetched data
-        } catch {
-            showErrorAlert("Unable to retrieve user data. Please refresh the page or try again later.");
-            // Don't log out user if fetching fails
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+            logoutUser(); // Logout user if fetching data fails
         }
     };
 
@@ -160,33 +157,25 @@ export const AuthProvider = ({ children }) => {
 
     const showSuccessAlert = (message) => {
         Swal.fire({
-            title: 'Success!',
-            text: message,
+            title: message,
             icon: "success",
             toast: true,
+            timer: 6000,
             position: 'top-right',
-            timer: 5000,
             timerProgressBar: true,
             showConfirmButton: false,
-            customClass: {
-                popup: 'alert-popup',
-            },
         });
     };
 
-    const showErrorAlert = (message, action) => {
+    const showErrorAlert = (message) => {
         Swal.fire({
-            title: 'Error!',
-            text: message + (action ? ` Please try ${action}.` : ''),
+            title: message,
             icon: "error",
             toast: true,
+            timer: 6000,
             position: 'top-right',
-            timer: 5000,
             timerProgressBar: true,
             showConfirmButton: false,
-            customClass: {
-                popup: 'alert-popup',
-            },
         });
     };
 

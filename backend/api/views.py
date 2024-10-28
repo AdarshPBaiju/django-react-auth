@@ -1,4 +1,14 @@
 from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.conf import settings
+from django.contrib.auth.hashers import make_password
+
 
 from .models import User, Profile
 from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegisterSerializer
@@ -81,3 +91,84 @@ class LogoutView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ResetPassword(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = get_object_or_404(User, email=email)
+        if not user:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+        # Send email with frontent url
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        frontend_url = settings.FRONTEND_URL
+        reset_link = f"{frontend_url}/reset-password/{uid}/{token}"
+        subject = "Password Reset Requested"
+        message = f"Please use the link below to reset your password:\n{reset_link}"
+        from_email = settings.DEFAULT_FROM_EMAIL  # Ensure you have set your default from email
+        send_mail(subject, message, from_email, [email])
+        
+        return Response({'message': 'Password reset email sent.'}, status=status.HTTP_200_OK)
+
+
+class VerifyResetPasswordLink(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid = request.data.get('uid')
+        token = request.data.get('token')
+
+        # Validate request data
+        if not uid or not token:
+            return Response({'error': 'UID and token are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Decode UID to get user ID
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+        except (TypeError, ValueError, OverflowError):
+            user_id = None
+        
+        # Retrieve user by ID (email in this case)
+        user = get_object_or_404(User, pk=user_id)  # `pk` should be the email field if `email` is the primary key
+
+        # Validate the token
+        if default_token_generator.check_token(user, token):
+            return Response({'message': 'Valid reset password link.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid or expired reset password link.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class ConfirmResetPassword(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid = request.data.get('uid')
+        token = request.data.get('token')
+        new_password = request.data.get('newPassword')
+
+        # Validate request data
+        if not uid or not token or not new_password:
+            return Response({'error': 'UID, token, and new password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Decode UID to get user ID
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+        except (TypeError, ValueError, OverflowError):
+            user_id = None
+
+        # Retrieve user by ID
+        user = get_object_or_404(User, pk=user_id)
+
+        # Validate the token
+        if default_token_generator.check_token(user, token):
+            # Update the password
+            user.password = make_password(new_password)  # Hash the new password
+            user.save()
+            return Response({'message': 'Password updated successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid or expired reset password link.'}, status=status.HTTP_400_BAD_REQUEST)

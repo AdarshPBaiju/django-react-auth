@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'profile']  # Include the profile field
+        fields = ['email', 'username', 'profile']  # Include the profile field
 
     def update(self, instance, validated_data):
         # Update profile data
@@ -38,12 +38,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         
-        token['full_name'] = user.profile.full_name
         token['username'] = user.username
         token['email'] = user.email
-        token['bio'] = user.profile.bio
-        token['image'] = str(user.profile.image)
-        token['verified'] = user.profile.verified
         
         return token
 
@@ -68,4 +64,5 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+        # Profile.objects.create(user=user)
         return user

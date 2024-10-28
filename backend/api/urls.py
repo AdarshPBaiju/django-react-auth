@@ -2,7 +2,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from django.urls import path
 
-from .views import MyTokenObtainPairView, RegisterView, dashboard, LogoutView,user_data
+from .views import MyTokenObtainPairView, RegisterView, dashboard, LogoutView,user_data, ResetPassword, VerifyResetPasswordLink, ConfirmResetPassword
 
 urlpatterns = [
     path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -11,4 +11,7 @@ urlpatterns = [
     path('dashboard/', dashboard, name='dashboard'),
     path('userdata/', user_data, name='user_data'),
     path('token/logout/', LogoutView.as_view(), name='token_blacklist'),
+    path('reset-password/', ResetPassword.as_view(), name='reset-password'),
+    path('reset-password/verify/', VerifyResetPasswordLink.as_view(), name='verify_reset_password'),
+    path('reset-password/confirm/', ConfirmResetPassword.as_view(), name='confirm_reset_password'),
 ]

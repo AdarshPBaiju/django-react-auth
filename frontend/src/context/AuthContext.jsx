@@ -65,8 +65,14 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("authTokens", JSON.stringify(response.data));
             await fetchUserData(); // Fetch updated user data after refreshing token
         } catch (error) {
-            console.error("Token refresh error:", error);
-            logoutUser(); // Logout if token refresh fails
+            if (error.response && error.response.status === 401) {
+                // If the refresh token is expired, log the user out
+                showErrorAlert("Session expired. Please log in again.", "logging in again");
+                logoutUser(); // Only call logoutUser if refresh token is expired
+            } else {
+                // Handle server unresponsive case
+                showErrorAlert("Unable to refresh session. Please try again later.", "refreshing your session");
+            }
         }
     };
 
@@ -82,11 +88,10 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("authTokens", JSON.stringify(response.data));
 
             await fetchUserData(); // Fetch user data after login
+            showSuccessAlert("You have successfully logged in.");
             navigate("/");
-            showSuccessAlert("Login Successful");
-        } catch (error) {
-            console.error("Login error:", error);
-            showErrorAlert("Invalid email or password");
+        } catch {
+            showErrorAlert("Invalid email or password.", "checking your credentials");
         } finally {
             setLoading(false);
         }
@@ -102,16 +107,75 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (response.status === 201) {
+                showSuccessAlert("Registration successful! You can now log in.");
                 navigate("/login");
-                showSuccessAlert("Registration Successful, Login Now");
             }
-        } catch (error) {
-            console.error("Registration error:", error);
-            showErrorAlert("An Error Occurred: " + (error.response?.data?.detail || error.message));
+        } catch {
+            showErrorAlert("Registration failed. Please check your input and try again.");
         } finally {
             setLoading(false);
         }
     };
+
+    const resetPassword = async (email) => {
+        setLoading(true);
+        try {
+            await axios.post(`${BASE_URL}/reset-password/`, {
+                email
+            }, {
+                headers: { "Content-Type": "application/json" }
+            });
+            showSuccessAlert("Password reset email sent successfully. Please check your inbox.");
+            navigate("/");
+        }
+        catch {
+            showErrorAlert("Error sending password reset email. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const verifyResetPasswordLink = async (uid, token) => {
+        setLoading(true);
+        try {
+            const response = await axios.post(`${BASE_URL}/reset-password/verify/`, 
+                { uid, token },  // Sending uid and token in the request body
+                { headers: { "Content-Type": "application/json" } }
+            );
+    
+            return response.status === 200;  // Return true if the status is 200
+        } catch (error) {
+            console.error("Error verifying reset password link:", error);
+            return false;  // Return false in case of error
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updatePassword = async (uid, token, newPassword, confirmPassword) => {
+        setLoading(true);
+        try {
+            if (newPassword !== confirmPassword) {
+                showErrorAlert("Passwords do not match.");
+                setLoading(false);
+                return
+            }
+            const response = await axios.post(`${BASE_URL}/reset-password/confirm/`, {
+                uid, token, newPassword
+            },{
+                headers: { "Content-Type": "application/json" }
+            })
+            if (response.status === 200) {
+                showSuccessAlert("Password updated successfully.");
+                navigate("/login");
+            }
+        }
+        catch {
+            showErrorAlert("Error updating password. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const logoutUser = async () => {
         try {
@@ -124,13 +188,12 @@ export const AuthProvider = ({ children }) => {
             }
 
             clearAuthData();
+            showSuccessAlert("You have been logged out successfully.");
             navigate("/login");
-            showSuccessAlert("You have been logged out...");
-        } catch (error) {
-            console.error('Error during logout:', error);
-            clearAuthData();
-            navigate("/login");
+        } catch {
+            // Keep user logged in if logout fails
             showErrorAlert("Error while logging out. Token may not be blacklisted.");
+            // No logout action taken
         }
     };
 
@@ -143,9 +206,9 @@ export const AuthProvider = ({ children }) => {
             });
 
             setUser(response.data); // Update the user state with the fetched data
-        } catch (error) {
-            console.error("Error fetching user data:", error);
-            logoutUser(); // Logout user if fetching data fails
+        } catch {
+            showErrorAlert("Unable to retrieve user data. Please refresh the page or try again later.");
+            // Don't log out user if fetching fails
         }
     };
 
@@ -157,25 +220,33 @@ export const AuthProvider = ({ children }) => {
 
     const showSuccessAlert = (message) => {
         Swal.fire({
-            title: message,
+            title: 'Success!',
+            text: message,
             icon: "success",
             toast: true,
-            timer: 6000,
             position: 'top-right',
+            timer: 5000,
             timerProgressBar: true,
             showConfirmButton: false,
+            customClass: {
+                popup: 'alert-popup',
+            },
         });
     };
 
-    const showErrorAlert = (message) => {
+    const showErrorAlert = (message, action) => {
         Swal.fire({
-            title: message,
+            title: 'Error!',
+            text: message + (action ? ` Please try ${action}.` : ''),
             icon: "error",
             toast: true,
-            timer: 6000,
             position: 'top-right',
+            timer: 5000,
             timerProgressBar: true,
             showConfirmButton: false,
+            customClass: {
+                popup: 'alert-popup',
+            },
         });
     };
 
@@ -189,6 +260,11 @@ export const AuthProvider = ({ children }) => {
         logoutUser,
         fetchUserData,
         loading,
+        resetPassword,
+        verifyResetPasswordLink,
+        updatePassword,
+        showErrorAlert,
+        showSuccessAlert
     };
 
     return (

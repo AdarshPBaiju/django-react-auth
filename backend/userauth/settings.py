@@ -153,7 +153,7 @@ SIMPLE_JWT = {
 'LEEWAY': 0,
 'AUTH_HEADER_TYPES': ('Bearer',),
 'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-'USER_ID_FIELD': 'id',
+'USER_ID_FIELD': 'email',
 'USER_ID_CLAIM': 'user_id',
 'USER_AUTHENTICATION_RULE':
 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
@@ -170,3 +170,13 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Replace with your email provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'adarshpbaiju2050@gmail.com'  # Replace with your email
+EMAIL_HOST_PASSWORD = 'whhlbhyyqipsslzo'   # Replace with your email password
+DEFAULT_FROM_EMAIL = 'adarshpbaiju2050@gmail.com'  # Replace with your email
+FRONTEND_URL = 'http://localhost:5173' 

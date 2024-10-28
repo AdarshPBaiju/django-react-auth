@@ -2,19 +2,18 @@ import { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 
-function LoginPage() {
-  const { loginUser } = useContext(AuthContext);
-  const [loading, setLoading] = useState(false); // New loading state
+function ResetPasswordPage() {
+  const { resetPassword } = useContext(AuthContext);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
-    const password = e.target.password.value;
 
     if (email.length > 0) {
-      setLoading(true); // Start loading
-      await loginUser(email, password);
-      setLoading(false); // Stop loading after login attempt
+      setLoading(true);
+      await resetPassword(email);
+      setLoading(false);
     }
   };
 
@@ -48,13 +47,13 @@ function LoginPage() {
                               style={{ color: '#ff6219' }}
                             ></i>
                             <span className='h2 fw-bold mb-0'>
-                              Welcome back 👋
+                              Reset Password 👋
                             </span>
                           </div>
                         </div>
 
                         <h5 className='fw-normal mb-3 pb-3' style={{ letterSpacing: '1px' }}>
-                          Sign into your account
+                          Enter Email to Reset Password
                         </h5>
 
                         <div className='form-outline mb-4'>
@@ -70,36 +69,19 @@ function LoginPage() {
                           </label>
                         </div>
 
-                        <div className='form-outline mb-4'>
-                          <input
-                            type='password'
-                            id='form2Example27'
-                            className='form-control form-control-lg'
-                            name='password'
-                            disabled={loading} // Disable input when loading
-                          />
-                          <label className='form-label' htmlFor='form2Example27'>
-                            Password
-                          </label>
-                        </div>
-
                         <div className='pt-1 mb-4'>
                           <button
                             className='btn btn-dark btn-lg btn-block'
                             type='submit'
                             disabled={loading} // Disable button when loading
                           >
-                            {loading ? 'Loading...' : 'Login'}
+                            {loading ? 'Loading...' : 'Reset Password'}
                           </button>
                         </div>
-
-                        <Link to='/reset-password' className='small text-muted' style={{ color: '#393f81' }}>
-                            forgot password
-                          </Link>
                         <p className='mb-5 pb-lg-2' style={{ color: '#393f81' }}>
-                          Dont have an account?{' '}
-                          <Link to='/register' style={{ color: '#393f81' }}>
-                            Register here
+                          Already have an account{' '}
+                          <Link to='/login' style={{ color: '#393f81' }}>
+                            Login here
                           </Link>
                         </p>
                         <a href='#!' className='small text-muted'>
@@ -121,4 +103,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default ResetPasswordPage;
