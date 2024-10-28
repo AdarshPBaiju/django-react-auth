@@ -168,6 +168,7 @@ class ConfirmResetPassword(APIView):
         if default_token_generator.check_token(user, token):
             # Update the password
             user.password = make_password(new_password)  # Hash the new password
+            user.is_active=True
             user.save()
             return Response({'message': 'Password updated successfully.'}, status=status.HTTP_200_OK)
         else:
