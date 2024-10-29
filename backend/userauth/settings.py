@@ -173,7 +173,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 
-<<<<<<< HEAD
+
 EMAIL_HOST=config('EMAIL_HOST')
 EMAIL_PORT=config('EMAIL_PORT', cast=int)
 EMAIL_HOST_USER=config('EMAIL_HOST_USER')
@@ -181,13 +181,4 @@ EMAIL_HOST_PASSWORD=config('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS=config('EMAIL_USE_TLS', cast=bool)
 DEFAULT_FROM_EMAIL=config('DEFAULT_FROM_EMAIL')
 FRONTEND_URL = config('FRONTEND_URL')
-=======
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Replace with your email provider
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'xxxxx@gmail.com'  # Replace with your email
-EMAIL_HOST_PASSWORD = 'password'   # Replace with your email password
-DEFAULT_FROM_EMAIL = 'xxxxx@gmail.com'  # Replace with your email
-FRONTEND_URL = 'http://localhost:5173' 
->>>>>>> 9722bdb25319f46e665ae487ce6cb5c0acde47ea
+
