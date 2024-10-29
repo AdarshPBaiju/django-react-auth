@@ -177,15 +177,17 @@ class VerifyResetPasswordLink(APIView):
             user_id = None
             
         signer = TimestampSigner()
-        
-        # Retrieve user by ID (email in this case)
-        user = get_object_or_404(User, pk=user_id)
-        original_token = signer.unsign(token, max_age=900) 
-        # Validate the token
-        if default_token_generator.check_token(user, original_token):
-            return Response({'message': 'Valid reset password link.'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Invalid or expired reset password link.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+             # Retrieve user by ID (email in this case)
+            user = get_object_or_404(User, pk=user_id)
+            original_token = signer.unsign(token, max_age=900) 
+            # Validate the token
+            if default_token_generator.check_token(user, original_token):
+                return Response({'message': 'Valid reset password link.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid or expired reset password link.'}, status=status.HTTP_400_BAD_REQUEST)
+        except SignatureExpired:
+            return Response({'error': 'Token has expired'}, status=status.HTTP_400_BAD_REQUEST)
         
 
 class ConfirmResetPassword(APIView):
@@ -208,16 +210,19 @@ class ConfirmResetPassword(APIView):
             user_id = None
 
         # Retrieve user by ID
-        user = get_object_or_404(User, pk=user_id)
-        
-        original_token = signer.unsign(token, max_age=900)
+        try:
+            user = get_object_or_404(User, pk=user_id)
+            
+            original_token = signer.unsign(token, max_age=900)
 
-        # Validate the token
-        if default_token_generator.check_token(user, original_token):
-            # Update the password
-            user.password = make_password(new_password)  # Hash the new password
-            user.is_active=True
-            user.save()
-            return Response({'message': 'Password updated successfully.'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Invalid or expired reset password link.'}, status=status.HTTP_400_BAD_REQUEST)
+            # Validate the token
+            if default_token_generator.check_token(user, original_token):
+                # Update the password
+                user.password = make_password(new_password)  # Hash the new password
+                user.is_active=True
+                user.save()
+                return Response({'message': 'Password updated successfully.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid or expired reset password link.'}, status=status.HTTP_400_BAD_REQUEST)
+        except SignatureExpired:
+            return Response({'error': 'Token has expired'}, status=status.HTTP_400_BAD_REQUEST)
