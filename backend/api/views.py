@@ -13,7 +13,7 @@ from django.contrib.auth.hashers import make_password
 from .models import User, Profile
 from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegisterSerializer
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, APIView
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -30,6 +30,30 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = ([AllowAny])
+    
+
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid = request.data.get('uid')
+        token = request.data.get('token')
+
+        try:
+            d_uid = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=d_uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Invalid verification link"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if token is valid
+        if default_token_generator.check_token(user, token):
+            user.is_active = True
+            user.save()
+            return Response({"message": "Email successfully verified"}, status=status.HTTP_200_OK)
+
+        return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 @api_view(['GET', 'POST'])
@@ -69,7 +93,7 @@ def user_data(request):
     
     return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
-from rest_framework.views import APIView
+
 from rest_framework_simplejwt.tokens import RefreshToken
 
 

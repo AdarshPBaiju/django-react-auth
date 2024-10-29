@@ -10,7 +10,8 @@ import HomePage from "./views/HomePage";
 import LoginPage from "./views/LoginPage";
 import RegisterPage from "./views/RegisterPage";
 import ResetPasswordPage from "./views/ResetPasswordPage";
-import EnterNewPasswordPage from './views/EnterNewPasswordPAge';
+import EnterNewPasswordPage from './views/EnterNewPasswordPage';
+import EmailVerifiedPage from './views/EmailVerifiedPage';
 
 function App() {
   return (
@@ -26,6 +27,10 @@ function App() {
             <Route 
                 path="/register" 
                 element={<PrivateRedirect element={<RegisterPage />} />} 
+            />
+            <Route 
+                path="/verify-email/:uid/:token" 
+                element={<PrivateRedirect element={<EmailVerifiedPage />} />} 
             />
             <Route 
                 path="/reset-password" 

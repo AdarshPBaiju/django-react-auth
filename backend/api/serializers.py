@@ -1,4 +1,9 @@
 from .models import User, Profile
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.conf import settings
 
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -64,5 +69,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
-        # Profile.objects.create(user=user)
+        
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        verification_link = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}"
+
+        # Send email with verification link
+        send_mail(
+            subject="Email Verification",
+            message=f"Click the link to verify your email: \n{verification_link}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
         return user

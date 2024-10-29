@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { createContext, useState, useEffect } from "react";
@@ -117,6 +118,32 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const verifyEmail = async (uid, token) => {
+        setLoading(true);
+        try {
+            await axios.post(`${BASE_URL}/verify-email/`, {
+                uid,
+                token,
+            }, {
+                headers: { "Content-Type": "application/json" },
+            });
+            // Return a success message or a success state
+            showSuccessAlert(
+                "Email verification successful. You can now log in."
+            )
+            return { success: true, message: "Email verification successful. You can now log in." };
+        } catch (error) {
+            // Return a failure message or an error state
+            showErrorAlert(
+                "Error verifying email—please check the verification link and try again later"
+            )
+            return { success: false, message: "Error verifying email—please check the verification link and try again later" };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
     const resetPassword = async (email) => {
         setLoading(true);
         try {
@@ -206,9 +233,15 @@ export const AuthProvider = ({ children }) => {
             });
 
             setUser(response.data); // Update the user state with the fetched data
-        } catch {
-            showErrorAlert("Unable to retrieve user data. Please refresh the page or try again later.");
-            // Don't log out user if fetching fails
+        } catch(error) {
+            if(error.response && error.response.status === 401){
+                // If the access token is expired, log the user out
+                showErrorAlert("Session expired. Please log in again.", "logging in again");
+                logoutUser(); // Only call logoutUser if access token is expired
+            } else {
+                // Handle server unresponsive case
+                showErrorAlert("Unable to fetch user data. Please try again later.");
+            }
         }
     };
 
@@ -264,7 +297,8 @@ export const AuthProvider = ({ children }) => {
         verifyResetPasswordLink,
         updatePassword,
         showErrorAlert,
-        showSuccessAlert
+        showSuccessAlert,
+        verifyEmail
     };
 
     return (
