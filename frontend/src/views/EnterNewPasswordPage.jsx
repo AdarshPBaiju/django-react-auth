@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 
@@ -11,6 +11,12 @@ function EnterNewPasswordPage() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(true);
+    const hasVerifiedRef = useRef(false);
+
+
+    useEffect(() => {
+        hasVerifiedRef.current = false; 
+    }, [uid, token]);
 
 
     useEffect(() => {
@@ -19,10 +25,11 @@ function EnterNewPasswordPage() {
             setIsValidLink(isValid);
             setLoading(false);
         }
-        if (uid && token) {
+        if (uid && token && !hasVerifiedRef.current) {
+            hasVerifiedRef.current = true;
             verifyLink();
         }
-    }, []);
+    }, [uid, token]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

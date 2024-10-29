@@ -56,20 +56,20 @@ class VerifyEmailView(APIView):
 
 
 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def dashboard(request):
-    print("User:", request.user)  # Check the user
-    if request.method == 'GET':
+class DashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
         response = f"Hey {request.user}, you are seeing a get response"
         return Response({'response': response}, status=status.HTTP_200_OK)
-    
-    elif request.method == 'POST':
-        text = request.data.get("text")  # Use request.data for POST data
+
+    def post(self, request):
+        text = request.data.get("text")
+        if not text:
+            return Response({'error': 'Text field is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         response = f"Hey {request.user}, your text is {text}"
         return Response({'response': response}, status=status.HTTP_201_CREATED)
-
-    return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'PUT', 'PATCH'])

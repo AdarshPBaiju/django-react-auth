@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 
@@ -7,16 +7,22 @@ const EmailVerifiedPage = () => {
     const { uid, token } = useParams();
     const { verifyEmail, loading } = useContext(AuthContext);
     const [message, setMessage] = useState('');
+    const hasVerifiedRef = useRef(false);
 
     useEffect(() => {
-        if (uid && token) {
+        hasVerifiedRef.current = false; 
+    }, [uid, token]);
+
+    useEffect(() => {
+        if (uid && token && !hasVerifiedRef.current) {
             const verifyUserEmail = async () => {
+                hasVerifiedRef.current = true;
                 const response = await verifyEmail(uid, token);
                 setMessage(response.message); // Set the message based on the response
             };
             verifyUserEmail();
         }
-    }, []);
+    }, [uid, token]);
 
     return (
         <div className="verification-container mt-5 mb-5">

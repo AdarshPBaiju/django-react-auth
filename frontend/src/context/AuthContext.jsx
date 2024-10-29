@@ -3,7 +3,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { createContext, useState, useEffect } from "react";
 import { jwtDecode as jwt_decode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 import axios from 'axios';
 
@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
 
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         checkTokenValidity();
@@ -90,7 +91,8 @@ export const AuthProvider = ({ children }) => {
 
             await fetchUserData(); // Fetch user data after login
             showSuccessAlert("You have successfully logged in.");
-            navigate("/");
+            const from = location.state?.from?.pathname || "/";
+            navigate(from, { replace: true });
         } catch {
             showErrorAlert("Invalid email or password.", "checking your credentials");
         } finally {

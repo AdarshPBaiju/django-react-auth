@@ -7,7 +7,7 @@ const PrivateRedirect = ({ element }) => {
     const { user } = useContext(AuthContext);
 
     // Redirect logged-in users to the dashboard
-    return user ? <Navigate to="/dashboard" replace /> : element;
+    return user ? <Navigate to="/dashboard" /> : element;
 };
 
 // Export the component as default

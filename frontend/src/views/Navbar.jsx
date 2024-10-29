@@ -6,14 +6,14 @@ import { Link, useLocation } from 'react-router-dom'
 function Navbar () {
   const { user, logoutUser, fetchUserData } = useContext(AuthContext)
   const token = localStorage.getItem('authTokens')
-  const location = useLocation();
+  const location = useLocation()
 
   useEffect(() => {
-    fetchUserData(); // Fetch user data when component mounts
-}, [location]);
+    fetchUserData()
+  }, [location])
 
   const handleLogout = () => {
-    logoutUser() // Call logoutUser when needed
+    logoutUser() 
   }
   return (
     <>
@@ -74,14 +74,11 @@ function Navbar () {
                       aria-current='page'
                       to='/dashboard'
                     >
-                      {user.username}
+                      {user.email}
                     </Link>
                   </li>
                   <li className='nav-item'>
-                    <button
-                      className='btn btn-primary'
-                      onClick={handleLogout}
-                    >
+                    <button className='btn btn-primary' onClick={handleLogout}>
                       Logout
                     </button>
                   </li>
