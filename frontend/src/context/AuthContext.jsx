@@ -86,7 +86,6 @@ export const AuthProvider = ({ children }) => {
             });
 
             setAuthTokens(response.data);
-            setUser(jwt_decode(response.data.access));
             localStorage.setItem("authTokens", JSON.stringify(response.data));
 
             await fetchUserData(); // Fetch user data after login
@@ -247,6 +246,10 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    useEffect(() => {
+        checkTokenValidity();
+    }, [location]);
+
     const clearAuthData = () => {
         setAuthTokens(null);
         setUser(null);
@@ -285,6 +288,8 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    const isAuthenticated = !!authTokens;
+
     const contextData = {
         user,
         setUser,
@@ -300,7 +305,8 @@ export const AuthProvider = ({ children }) => {
         updatePassword,
         showErrorAlert,
         showSuccessAlert,
-        verifyEmail
+        verifyEmail,
+        isAuthenticated
     };
 
     return (

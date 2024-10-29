@@ -1,16 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useContext, useEffect } from 'react'
+
+import { useContext } from 'react'
 import AuthContext from '../context/AuthContext'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 function Navbar () {
-  const { user, logoutUser, fetchUserData } = useContext(AuthContext)
-  const token = localStorage.getItem('authTokens')
-  const location = useLocation()
-
-  useEffect(() => {
-    fetchUserData()
-  }, [location])
+  const { user, logoutUser, isAuthenticated } = useContext(AuthContext)
 
   const handleLogout = () => {
     logoutUser() 
@@ -44,7 +38,7 @@ function Navbar () {
                   Home
                 </Link>
               </li>
-              {token == null && (
+              {!isAuthenticated && (
                 <>
                   <li className='nav-item'>
                     <Link
@@ -66,7 +60,7 @@ function Navbar () {
                   </li>
                 </>
               )}
-              {token != null && (
+              {isAuthenticated  && (
                 <>
                   <li className='nav-item'>
                     <Link
@@ -74,7 +68,34 @@ function Navbar () {
                       aria-current='page'
                       to='/dashboard'
                     >
-                      {user.email}
+                      Dashboard
+                    </Link>
+                  </li>
+                  <li className='nav-item'>
+                    <Link
+                      className='nav-link active'
+                      aria-current='page'
+                      to='/common'
+                    >
+                      {user.role}
+                    </Link>
+                  </li>
+                  <li className='nav-item'>
+                    <Link
+                      className='nav-link active'
+                      aria-current='page'
+                      to='/admin'
+                    >
+                      admin
+                    </Link>
+                  </li>
+                  <li className='nav-item'>
+                    <Link
+                      className='nav-link active'
+                      aria-current='page'
+                      to='/user'
+                    >
+                      user
                     </Link>
                   </li>
                   <li className='nav-item'>
