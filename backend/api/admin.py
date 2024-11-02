@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Profile
+from .models import User, Profile, VideoFile
 
 # Register your models here.
 
@@ -13,4 +13,5 @@ class ProfileAdmin(admin.ModelAdmin):
     
     
 admin.site.register(User, UserAdmin)
+admin.site.register(VideoFile)
 admin.site.register(Profile, ProfileAdmin)

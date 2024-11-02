@@ -1,10 +1,13 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/prop-types */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { createContext, useState, useEffect } from "react";
 import { jwtDecode as jwt_decode } from "jwt-decode";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 import axios from 'axios';
 
-
+// Define a base URL for the API (consider using environment variables)
 const BASE_URL = "http://127.0.0.1:8000/api"; 
 
 const AuthContext = createContext();
@@ -20,12 +23,26 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
 
     const [loading, setLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
+        setIsAuthenticated(!!authTokens && user !== null);
+    }, [authTokens, user]);
+
+    useEffect(() => {
+        // Set isAuthenticated based on authTokens and user
+        if (authTokens && user !== null) {
+            setIsAuthenticated(true);
+        } else {
+            setIsAuthenticated(false);
+        }
+    }, [authTokens, user]);
+
+    useEffect(() => {
         checkTokenValidity();
-    }, []);
+    }, []); // Only run once on mount
 
     const checkTokenValidity = async () => {
         if (!authTokens) {
@@ -42,47 +59,47 @@ export const AuthProvider = ({ children }) => {
             console.log('Token expired')
             await refreshAuthToken();
         } else {
-            console.log('Token valid')
+            console.log('Token still valid');
             await fetchUserData(); // Fetch user data if token is still valid
         }
 
         setLoading(false);
     };
-    
 
     const refreshAuthToken = async () => {
-        setLoading(true)
+        if (!authTokens) return; // Ensure authTokens exist
+    
         try {
-            if (!authTokens) {
-                setLoading(false)
-                logoutUser();
-                return;
-            }
-            console.log('Refreshing auth token')
-            const response = await axios.post(`${BASE_URL}/token/refresh/`, {
-                refresh: authTokens.refresh
-            }, {
-                headers: {
-                    "Content-Type": "application/json"
+            console.log('Refreshing token...');
+    
+            // Make the request to refresh the token
+            const response = await axios.post(
+                `${BASE_URL}/token/refresh/`,
+                { refresh: authTokens.refresh },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
                 }
-            });
-
-            // Update authTokens state and local storage
-            setAuthTokens(response.data);
-            localStorage.setItem("authTokens", JSON.stringify(response.data));
-            console.log(response.data)
-            await fetchUserData(response.data.access);
-        } catch(e){
-            setLoading(false)
-            if (e.response && e.response.status === 401) {
-                console.log('Unauthorized')
-                showErrorAlert('Session Expired Please log in again')
-                logoutUser();
+            );
+    
+            console.log('Response from refresh token:', response.data); // Log response for debugging
+    
+            localStorage.setItem("authTokens", JSON.stringify(response.data)); // Store updated tokens
+            const token = localStorage.getItem("authTokens");
+            setAuthTokens(token);
+    
+        } catch (error) {
+            console.error('Error refreshing token:', error); // Log error for debugging
+            if (error.response && error.response.status === 401) {
+                showErrorAlert('Session expired. Please log in again.', 'logging in again');
+                logoutUser(); // Log out if refresh token is invalid
             } else {
-                showErrorAlert('Unsable to refresh token')
+                showErrorAlert('Unable to refresh session. Please try again later.', 'refreshing your session');
             }
         }
     };
+    
 
     const loginUser = async (email, password) => {
         setLoading(true);
@@ -94,13 +111,10 @@ export const AuthProvider = ({ children }) => {
             setAuthTokens(response.data);
             localStorage.setItem("authTokens", JSON.stringify(response.data));
 
-            await fetchUserData(response.data.access);
-
-             // Fetch user data after login
+            await fetchUserData(); // Fetch user data after login
             showSuccessAlert("You have successfully logged in.");
             const from = location.state?.from?.pathname || "/";
             navigate(from, { replace: true });
-            
         } catch {
             showErrorAlert("Invalid email or password.", "checking your credentials");
         } finally {
@@ -137,15 +151,22 @@ export const AuthProvider = ({ children }) => {
             }, {
                 headers: { "Content-Type": "application/json" },
             });
-            showSuccessAlert("Email verification successful. You can now log in.");
+            // Return a success message or a success state
+            showSuccessAlert(
+                "Email verification successful. You can now log in."
+            )
             return { success: true, message: "Email verification successful. You can now log in." };
         } catch (error) {
-            showErrorAlert("Error verifying email—please check the verification link and try again later");
+            // Return a failure message or an error state
+            showErrorAlert(
+                "Error verifying email—please check the verification link and try again later"
+            )
             return { success: false, message: "Error verifying email—please check the verification link and try again later" };
         } finally {
             setLoading(false);
         }
     };
+
 
     const resetPassword = async (email) => {
         setLoading(true);
@@ -157,7 +178,8 @@ export const AuthProvider = ({ children }) => {
             });
             showSuccessAlert("Password reset email sent successfully. Please check your inbox.");
             navigate("/");
-        } catch {
+        }
+        catch {
             showErrorAlert("Error sending password reset email. Please try again later.");
         } finally {
             setLoading(false);
@@ -168,13 +190,14 @@ export const AuthProvider = ({ children }) => {
         setLoading(true);
         try {
             const response = await axios.post(`${BASE_URL}/reset-password/verify/`, 
-                { uid, token },
+                { uid, token },  // Sending uid and token in the request body
                 { headers: { "Content-Type": "application/json" } }
             );
-            return response.status === 200; // Return true if the status is 200
+    
+            return response.status === 200;  // Return true if the status is 200
         } catch (error) {
             console.error("Error verifying reset password link:", error);
-            return false; // Return false in case of error
+            return false;  // Return false in case of error
         } finally {
             setLoading(false);
         }
@@ -186,18 +209,19 @@ export const AuthProvider = ({ children }) => {
             if (newPassword !== confirmPassword) {
                 showErrorAlert("Passwords do not match.");
                 setLoading(false);
-                return;
+                return
             }
             const response = await axios.post(`${BASE_URL}/reset-password/confirm/`, {
                 uid, token, newPassword
-            }, {
+            },{
                 headers: { "Content-Type": "application/json" }
-            });
+            })
             if (response.status === 200) {
                 showSuccessAlert("Password updated successfully.");
                 navigate("/login");
             }
-        } catch {
+        }
+        catch {
             showErrorAlert("Error updating password. Please try again later.");
         } finally {
             setLoading(false);
@@ -205,59 +229,43 @@ export const AuthProvider = ({ children }) => {
     }
 
     const logoutUser = async () => {
-        const tokenString = localStorage.getItem('authTokens');
-        let token;
-    
-        // Parse the token if it exists
         try {
-            if (tokenString) {
-                token = JSON.parse(tokenString);
-            }
-        } catch (error) {
-            console.error("Failed to parse authTokens:", error);
-        }
-    
-        // Proceed with logout if the refresh token is available
-        if (token && token.refresh) {
-            try {
+            if (authTokens) {
                 await axios.post(`${BASE_URL}/token/logout/`, {
-                    refresh: token.refresh
+                    refresh: authTokens.refresh
                 }, {
                     headers: { "Content-Type": "application/json" }
                 });
-    
-                clearAuthData();
-                showSuccessAlert("You have been logged out successfully.");
-                navigate("/login");
-            } catch (error) {
-                console.error("Error during logout:", error);
-                showErrorAlert("Error while logging out. Token may not be blacklisted.");
             }
-        } else {
-            console.warn("No valid token found. Unable to logout.");
-            showErrorAlert("No valid token found. You are not logged in.");
+
+            clearAuthData();
+            showSuccessAlert("You have been logged out successfully.");
+            navigate("/login");
+        } catch {
+            // Keep user logged in if logout fails
+            showErrorAlert("Error while logging out. Token may not be blacklisted.");
+            // No logout action taken
         }
     };
 
-    const fetchUserData = async (accessToken = authTokens?.access) => {
-        if (!accessToken) return;
-        
+    const fetchUserData = async () => {
+        if (!authTokens) return;
+
         try {
-            setLoading(true);
             const response = await axios.get(`${BASE_URL}/userdata/`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
+                headers: { Authorization: `Bearer ${authTokens.access}` }
             });
-        
-            setUser(response.data);
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
+
+            setUser(response.data); // Update the user state with the fetched data
+        } catch(error) {
+            if(error.response && error.response.status === 401){
+                // If the access token is expired, log the user out
                 showErrorAlert("Session expired. Please log in again.", "logging in again");
-                logoutUser();
+                logoutUser(); // Only call logoutUser if access token is expired
             } else {
+                // Handle server unresponsive case
                 showErrorAlert("Unable to fetch user data. Please try again later.");
             }
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -267,6 +275,7 @@ export const AuthProvider = ({ children }) => {
 
     const clearAuthData = () => {
         setAuthTokens(null);
+        setIsAuthenticated(false);
         setUser(null);
         localStorage.removeItem("authTokens");
     };
@@ -303,23 +312,30 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    const isAuthenticated = !!authTokens
+    
+    // const isAuthenticated = authTokens && user !== null;
+
+    const contextData = {
+        user,
+        setUser,
+        authTokens,
+        setAuthTokens,
+        registerUser,
+        loginUser,
+        logoutUser,
+        fetchUserData,
+        loading,
+        resetPassword,
+        verifyResetPasswordLink,
+        updatePassword,
+        showErrorAlert,
+        showSuccessAlert,
+        verifyEmail,
+        isAuthenticated
+    };
 
     return (
-        <AuthContext.Provider value={{
-            user,
-            loginUser,
-            registerUser,
-            verifyEmail,
-            resetPassword,
-            verifyResetPasswordLink,
-            updatePassword,
-            logoutUser,
-            loading,
-            authTokens,
-            isAuthenticated,
-            checkTokenValidity
-        }}>
+        <AuthContext.Provider value={contextData}>
             {children}
         </AuthContext.Provider>
     );

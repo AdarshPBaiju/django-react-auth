@@ -12,9 +12,9 @@ function LoginPage() {
     const password = e.target.password.value;
 
     if (email.length > 0) {
-      setLoading(true); // Start loading
+      setLoading(true);
       await loginUser(email, password);
-      setLoading(false); // Stop loading after login attempt
+      setLoading(false);
     }
   };
 

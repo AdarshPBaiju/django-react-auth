@@ -1,5 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from 'react';
+/* eslint-disable no-unused-vars */
+import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
 const Dashboard = () => {
@@ -20,24 +20,21 @@ const Dashboard = () => {
     }
 
     try {
-      console.log("Fetching data...");
       const result = await axios.get('http://127.0.0.1:8000/api/dashboard/', {
         headers: {
           'Authorization': `Bearer ${authTokens.access}`,
         },
       });
-      console.log("Data fetched:", result.data.response);
       setResponse(result.data.response);
     } catch (error) {
-      console.error("Error fetching data:", error);
       setResponse("Failed to fetch data. Please try again.");
     }
   };
 
   useEffect(() => {
-    console.log("Component mounted. Fetching data...");
     fetchData();
-  }, []); // Empty dependency array
+  },[]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

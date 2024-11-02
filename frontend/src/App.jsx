@@ -46,6 +46,7 @@ function App () {
             path='/reset-password/:uid/:token'
             element={<PrivateRedirect element={<EnterNewPasswordPage />} />}
           />
+          
           <Route
             path='/dashboard'
             element={<PrivateRoute element={<Dashboard />} />}

@@ -141,8 +141,10 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-'ACCESS_TOKEN_LIFETIME': timedelta(days=365*100),
-'REFRESH_TOKEN_LIFETIME': timedelta(days=365*100),
+'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+'REFRESH_TOKEN_LIFETIME': timedelta(minutes=15),
+# 'ACCESS_TOKEN_LIFETIME': timedelta(days=365*100),
+# 'REFRESH_TOKEN_LIFETIME': timedelta(days=365*100),
 'ROTATE_REFRESH_TOKENS': True,
 'BLACKLIST_AFTER_ROTATION': True,
 'UPDATE_LAST_LOGIN': True,
@@ -168,9 +170,30 @@ SIMPLE_JWT = {
 'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(minutes=1),
 }
 
-CORS_ALLOWED_ORIGINS = [
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",
+# ]
+
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+)
+
+CORS_ORIGIN_WHITELIST = (
     "http://localhost:5173",
-]
+)
+
+import os
+CORS_ALLOW_ALL_ORIGINS = True
+
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Ensure this is a string path
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 

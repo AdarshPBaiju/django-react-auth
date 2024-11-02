@@ -77,7 +77,7 @@ function Navbar () {
                       aria-current='page'
                       to='/common'
                     >
-                      {user.role}
+                      {user && user.role ? user.role : 'Role not assigned'}
                     </Link>
                   </li>
                   <li className='nav-item'>

@@ -1,4 +1,6 @@
+import os
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 # Create your models here.
@@ -62,3 +64,49 @@ class Profile(models.Model):
     def __str__(self):
         return self.full_name
     
+
+class VideoFile(models.Model):
+    video = models.FileField(upload_to='videos')
+    subtitle = models.FileField(upload_to='subtitles', null=True, blank=True)
+    thumbnail = models.ImageField(upload_to='thumbnail', null=True, blank=True)
+    title = models.CharField(max_length=200)
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        # Check if this is an update and delete old files if necessary
+        if self.pk:  # The object already exists in the database
+            old_video = VideoFile.objects.get(pk=self.pk).video
+            old_subtitle = VideoFile.objects.get(pk=self.pk).subtitle
+            old_thumbnail = VideoFile.objects.get(pk=self.pk).thumbnail
+
+            # Delete the old video file if it is being updated
+            if old_video and old_video.name != self.video.name:
+                if os.path.isfile(old_video.path):
+                    os.remove(old_video.path)
+
+            # Delete the old subtitle file if it is being updated
+            if old_subtitle and old_subtitle.name != self.subtitle.name:
+                if os.path.isfile(old_subtitle.path):
+                    os.remove(old_subtitle.path)
+
+            # Delete the old thumbnail file if it is being updated
+            if old_thumbnail and old_thumbnail.name != self.thumbnail.name:
+                if os.path.isfile(old_thumbnail.path):
+                    os.remove(old_thumbnail.path)
+
+        # Call the superclass save method to save the new file
+        super(VideoFile, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Delete the files associated with the instance before deleting the instance itself
+        if self.video and os.path.isfile(self.video.path):
+            os.remove(self.video.path)
+        if self.subtitle and os.path.isfile(self.subtitle.path):
+            os.remove(self.subtitle.path)
+        if self.thumbnail and os.path.isfile(self.thumbnail.path):
+            os.remove(self.thumbnail.path)
+
+        # Call the superclass delete method to delete the instance
+        super(VideoFile, self).delete(*args, **kwargs)
