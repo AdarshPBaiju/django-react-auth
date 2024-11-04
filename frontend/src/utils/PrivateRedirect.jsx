@@ -7,7 +7,7 @@ const PrivateRedirect = ({ element }) => {
     const { user, loading } = useContext(AuthContext);
 
     // Show a loading state if data is being fetched
-    if (loading) return <div>Loading...</div>; // Optional: add a loading spinner or message
+    // if (loading) return <div>Loading...</div>;
 
     // Redirect logged-in users to the dashboard
     return user ? <Navigate to="/dashboard" replace /> : element;

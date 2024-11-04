@@ -1,10 +1,14 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import AuthContext from '../context/AuthContext';
+import { jwtDecode } from 'jwt-decode';
 
 const Dashboard = () => {
   const [response, setResponse] = useState('');
   const [text, setText] = useState('');
+  const { logoutUser, isRefreshTokenExpired } = useContext(AuthContext);
 
   const getAuthTokens = () => {
     const tokens = JSON.parse(localStorage.getItem('authTokens'));
@@ -18,6 +22,11 @@ const Dashboard = () => {
       setResponse("No access token found.");
       return;
     }
+    // if (isRefreshTokenExpired(authTokens.refresh)) {
+    //   console.log("Refresh token expired.");
+    //   logoutUser("Session Expired Pls Login Again 1"); // Call logoutUser if the refresh token is expired
+    //   return; // Exit the function to prevent further actions
+    // }
 
     try {
       const result = await axios.get('http://127.0.0.1:8000/api/dashboard/', {
@@ -32,7 +41,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchData();
+      fetchData();
   },[]);
 
 
@@ -41,6 +50,11 @@ const Dashboard = () => {
     if (!authTokens.access) {
       setResponse("No access token found.");
       return;
+    }
+    if (isRefreshTokenExpired(authTokens.refresh)) {
+      console.log("Refresh token expired.");
+      logoutUser("Session Expired Pls Login Again 3"); // Call logoutUser if the refresh token is expired
+      return; // Exit the function to prevent further actions
     }
 
     try {

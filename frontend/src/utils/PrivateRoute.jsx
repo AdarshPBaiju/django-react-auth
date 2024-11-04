@@ -4,13 +4,13 @@ import AuthContext from "../context/AuthContext";
 import PropTypes from "prop-types";
 
 const PrivateRoute = ({ element }) => {
-    const { loading, isAuthenticated, checkTokenValidity } = useContext(AuthContext);
+    const { loading, isAuthenticated } = useContext(AuthContext);
     const location = useLocation();
 
     // Run token validity check when component mounts
-    useEffect(() => {
-        checkTokenValidity();
-    }, []);
+    // useEffect(() => {
+    //     checkTokenValidity();
+    // }, []);
 
     // Show loading indicator while checking authentication
     if (loading) {

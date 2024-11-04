@@ -1,8 +1,12 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/prop-types */
 import { createContext, useState, useEffect } from "react";
-import { jwtDecode as jwt_decode } from "jwt-decode";
+import { jwtDecode as jwt_decode, jwtDecode } from "jwt-decode";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import { toast } from "react-toastify";
 
 
 const BASE_URL = "http://127.0.0.1:8000/api"; 
@@ -23,9 +27,9 @@ export const AuthProvider = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    useEffect(() => {
-        checkTokenValidity();
-    }, []);
+    // useEffect(() => {
+    //     checkTokenValidity();
+    // }, []);
 
     const checkTokenValidity = async () => {
         if (!authTokens) {
@@ -48,10 +52,23 @@ export const AuthProvider = ({ children }) => {
 
         setLoading(false);
     };
+
+    const isRefreshTokenExpired = (refreshToken) => {
+        if (!refreshToken) return true;
+        const decodedToken = jwtDecode(refreshToken);
+        const currentTime = Math.floor(Date.now() / 1000);
+        return decodedToken.exp < currentTime;
+      };
     
 
     const refreshAuthToken = async () => {
         setLoading(true)
+        // if (isRefreshTokenExpired(authTokens.refresh)) {
+        //     console.log("Refresh token expired.");
+        //     logoutUser("Session Expired Pls Login Again 5"); // Call logoutUser if the refresh token is expired
+        //     setLoading(false)
+        //     return;
+        //   }
         try {
             if (!authTokens) {
                 setLoading(false)
@@ -71,13 +88,14 @@ export const AuthProvider = ({ children }) => {
             setAuthTokens(response.data);
             localStorage.setItem("authTokens", JSON.stringify(response.data));
             console.log(response.data)
+            console.log('refreshed')
+
             await fetchUserData(response.data.access);
         } catch(e){
             setLoading(false)
             if (e.response && e.response.status === 401) {
                 console.log('Unauthorized')
-                showErrorAlert('Session Expired Please log in again')
-                logoutUser();
+                logoutUser('Session Expired Please log in again');
             } else {
                 showErrorAlert('Unsable to refresh token')
             }
@@ -204,7 +222,7 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
-    const logoutUser = async () => {
+    const logoutUser = async (successMessage) => {
         const tokenString = localStorage.getItem('authTokens');
         let token;
     
@@ -227,7 +245,11 @@ export const AuthProvider = ({ children }) => {
                 });
     
                 clearAuthData();
-                showSuccessAlert("You have been logged out successfully.");
+                if (successMessage) {
+                    showErrorAlert(successMessage);
+                } else {
+                    showSuccessAlert("You have been logged out successfully.");
+                }
                 navigate("/login");
             } catch (error) {
                 console.error("Error during logout:", error);
@@ -271,36 +293,48 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem("authTokens");
     };
 
+    // const showSuccessAlert = (message) => {
+    //     Swal.fire({
+    //         title: 'Success!',
+    //         text: message,
+    //         icon: "success",
+    //         toast: true,
+    //         position: 'top-right',
+    //         timer: 5000,
+    //         timerProgressBar: true,
+    //         showConfirmButton: false,
+    //         customClass: {
+    //             popup: 'alert-popup',
+    //         },
+    //     });
+    // };
+
+    // const showErrorAlert = (message, action) => {
+    //     Swal.fire({
+    //         title: 'Error!',
+    //         text: message + (action ? ` Please try ${action}.` : ''),
+    //         icon: "error",
+    //         toast: true,
+    //         position: 'top-right',
+    //         timer: 5000,
+    //         timerProgressBar: true,
+    //         showConfirmButton: false,
+    //         customClass: {
+    //             popup: 'alert-popup',
+    //         },
+    //     });
+    // };
+
     const showSuccessAlert = (message) => {
-        Swal.fire({
-            title: 'Success!',
-            text: message,
-            icon: "success",
-            toast: true,
-            position: 'top-right',
-            timer: 5000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            customClass: {
-                popup: 'alert-popup',
-            },
+        toast.success(message, {
+            className: 'alert-popup',
         });
     };
-
-    const showErrorAlert = (message, action) => {
-        Swal.fire({
-            title: 'Error!',
-            text: message + (action ? ` Please try ${action}.` : ''),
-            icon: "error",
-            toast: true,
-            position: 'top-right',
-            timer: 5000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            customClass: {
-                popup: 'alert-popup',
-            },
-        });
+    
+    const showErrorAlert = (message) => {
+        toast.error(message), {
+            className: 'alert-popup',
+        };
     };
 
     const isAuthenticated = !!authTokens
@@ -318,7 +352,8 @@ export const AuthProvider = ({ children }) => {
             loading,
             authTokens,
             isAuthenticated,
-            checkTokenValidity
+            checkTokenValidity,
+            isRefreshTokenExpired
         }}>
             {children}
         </AuthContext.Provider>
