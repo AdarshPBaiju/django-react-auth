@@ -28,12 +28,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
     
-
-class CustomTokenRefreshView(TokenRefreshView):
-    permission_classes = ([AllowAny])
-
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
     
     
 class RegisterView(generics.CreateAPIView):
